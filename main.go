@@ -11,16 +11,16 @@ func main() {
 		Name:    "Zernike Shapes",
 		IsAscii: true,
 	}
-	heights := [][]float32{
-		{1, 3, 2},
-		{3, 3, 4},
-		{2, 4, 2},
+	const (
+		sideLen = 3
+	)
+	heights := [sideLen][sideLen]float32{
+		{1.1, 1.3, 1.2},
+		{1.3, 1.3, 1.4},
+		{1.2, 1.4, 1.2},
 	}
-	for row := range heights {
-		if row == 0 {
-			continue
-		}
-		for col := range heights[row] {
+	for row := 1; row < sideLen; row++ {
+		for col := 1; col < sideLen; col++ {
 			if col == 0 {
 				continue
 			}
@@ -41,37 +41,88 @@ func main() {
 			fmt.Printf("row %d col %d\n", row, col)
 		}
 	}
-	// 	Triangles: []stl.Triangle{
-	// 		{
-	// 			Vertices: [3]stl.Vec3{
-	// 				{0, 0, 0},
-	// 				{0, 1, 0},
-	// 				{1, 0, 0},
-	// 			},
-	// 		},
-	// 		{
-	// 			Vertices: [3]stl.Vec3{
-	// 				{0, 0, 0},
-	// 				{1, 0, 0},
-	// 				{0, 0, 1},
-	// 			},
-	// 		},
-	// 		{
-	// 			Vertices: [3]stl.Vec3{
-	// 				{0, 0, 1},
-	// 				{1, 0, 0},
-	// 				{0, 1, 0},
-	// 			},
-	// 		},
-	// 		{
-	// 			Vertices: [3]stl.Vec3{
-	// 				{0, 0, 0},
-	// 				{0, 0, 1},
-	// 				{0, 1, 0},
-	// 			},
-	// 		},
-	// 	},
-	// }
+
+	// Add base.
+	s.AppendTriangle(stl.Triangle{
+		Vertices: [3]stl.Vec3{
+			{0, 0, 0},
+			{0, float32(sideLen - 1), 0},
+			{float32(sideLen - 1), float32(sideLen - 1), 0},
+		},
+	})
+	s.AppendTriangle(stl.Triangle{
+		Vertices: [3]stl.Vec3{
+			{0, 0, 0},
+			{float32(sideLen - 1), float32(sideLen - 1), 0},
+			{float32(sideLen - 1), 0, 0},
+		},
+	})
+
+	// Add sides.
+	for i := 1; i < sideLen; i++ {
+		// Front side.
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{0, float32(i - 1), 0},
+				{0, float32(i - 1), heights[0][i-1]},
+				{0, float32(i), heights[0][i]},
+			},
+		})
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{0, float32(i - 1), 0},
+				{0, float32(i), heights[0][i]},
+				{0, float32(i), 0},
+			},
+		})
+		// Back side.
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{float32(sideLen - 1), float32(i - 1), 0},
+				{float32(sideLen - 1), float32(i), heights[sideLen-1][i]},
+				{float32(sideLen - 1), float32(i - 1), heights[sideLen-1][i-1]},
+			},
+		})
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{float32(sideLen - 1), float32(i - 1), 0},
+				{float32(sideLen - 1), float32(i), 0},
+				{float32(sideLen - 1), float32(i), heights[sideLen-1][i]},
+			},
+		})
+		// Left side.
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{float32(i - 1), 0, 0},
+				{float32(i), 0, heights[i][0]},
+				{float32(i - 1), 0, heights[i-1][0]},
+			},
+		})
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{float32(i - 1), 0, 0},
+				{float32(i), 0, 0},
+				{float32(i), 0, heights[i][0]},
+			},
+		})
+		// Right side.
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{float32(i - 1), float32(sideLen - 1), 0},
+				{float32(i - 1), float32(sideLen - 1), heights[i-1][sideLen-1]},
+				{float32(i), float32(sideLen - 1), heights[i][sideLen-1]},
+			},
+		})
+		s.AppendTriangle(stl.Triangle{
+			Vertices: [3]stl.Vec3{
+				{float32(i - 1), float32(sideLen - 1), 0},
+				{float32(i), float32(sideLen - 1), heights[i][sideLen-1]},
+				{float32(i), float32(sideLen - 1), 0},
+			},
+		})
+	}
+
+	// Clean it up and write it out.
 	s.RecalculateNormals()
 	s.WriteFile("/Users/timboldt/Desktop/test.stl")
 }
