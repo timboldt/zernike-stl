@@ -37,6 +37,11 @@ func main() {
 	addZernikeShape(s, defocus, 2, 0)
 	addZernikeShape(s, astigo, 2, 1)
 	addZernikeShape(s, astigv, 2, 2)
+	addZernikeShape(s, comav, 3, 0)
+	addZernikeShape(s, comah, 3, 1)
+	addZernikeShape(s, trefv, 3, 2)
+	addZernikeShape(s, trefo, 3, 3)
+	addZernikeShape(s, spherical, 4, 0)
 
 	// Clean it up and write it out.
 	s.RecalculateNormals()
@@ -153,8 +158,8 @@ func addZernikeShape(s *stl.Solid, noll int, row, col int) {
 
 func getHeightMap(noll int) [sideLen][sideLen]float32 {
 	const (
-		offset = 3.0
-		scale  = 7.0
+		offset = float32(sideLen-1) / 2
+		scale  = 2.0
 	)
 	heights := [sideLen][sideLen]float32{}
 	for row := 1; row < sideLen-1; row++ {
@@ -166,16 +171,21 @@ func getHeightMap(noll int) [sideLen][sideLen]float32 {
 			case tilt:
 				heights[row][col] = float32(2 * rho * math.Sin(phi))
 			case defocus:
-				heights[row][col] = -1*float32(math.Sqrt(3)*(2*rho*rho-1)) - offset/2.0
+				heights[row][col] = -1 * float32(math.Sqrt(3)*(2*rho*rho-1))
 			case astigo:
 				heights[row][col] = float32(math.Sqrt(6) * rho * rho * math.Sin(2*phi))
 			case astigv:
 				heights[row][col] = float32(math.Sqrt(6) * rho * rho * math.Cos(2*phi))
 			case comav:
+				heights[row][col] = float32(math.Sqrt(8) * (3*rho*rho*rho - 2*rho) * math.Sin(phi))
 			case comah:
+				heights[row][col] = float32(math.Sqrt(8) * (3*rho*rho*rho - 2*rho) * math.Cos(phi))
 			case trefv:
+				heights[row][col] = float32(math.Sqrt(8) * rho * rho * rho * math.Sin(3*phi))
 			case trefo:
+				heights[row][col] = float32(math.Sqrt(8) * rho * rho * rho * math.Cos(3*phi))
 			case spherical:
+				heights[row][col] = float32(math.Sqrt(5) * (6*rho*rho*rho*rho - 6*rho*rho + 1))
 			default:
 				heights[row][col] = 0
 			}
@@ -203,7 +213,9 @@ func getHeightMap(noll int) [sideLen][sideLen]float32 {
 }
 
 func cartesianToPolar(row, col float64) (float64, float64) {
-	x := row - float64(sideLen)/2
-	y := col - float64(sideLen)/2
-	return math.Sqrt(x*x+y*y) / math.Sqrt(sideLen*sideLen+sideLen*sideLen), math.Atan2(y, x)
+	width := float64(sideLen - 1)
+	radius := width / 2
+	x := row - (width+1)/2
+	y := col - (width+1)/2
+	return math.Sqrt(x*x+y*y) / math.Sqrt(radius*radius+radius*radius), math.Atan2(y, x)
 }
